@@ -11,7 +11,7 @@
 
 const char* ssid = "UUMWiFi_Guest";
 const char* pass = "";
-String serverName = "https://ansf.infinitebe.com/wqms/insertdata.php";
+String serverName = "http://ansf.infinitebe.com/wqms/test.php";
 unsigned long sendDataPrevMillis = 0;
 int count = 0;
 
@@ -38,14 +38,15 @@ int analogBuffer[SCOUNT];  // store the analog value in the array, read from ADC
 int analogBufferTemp[SCOUNT];
 int analogBufferIndex = 0;
 int copyIndex = 0;
-float temperatureC = 0;
-int turbidity = 0;
+float temperatureC;
+int turbidity;
 
 //tds
 int i = 0;  //TDS
 float averageVoltage = 0;
-float tdsValue = 0;
-float temperature = 25;  // current temperature for compensation
+float tdsValue;
+float temperature = 25; 
+ // current temperature for compensation
 
 int getMedianNum(int bArray[], int iFilterLen) {  //tds function generator
   int bTab[iFilterLen];
@@ -91,7 +92,7 @@ void setup() {
 }
 void loop() {  //hanya untuk wifi
 
-  if (millis() - sendDataPrevMillis > 10000 || sendDataPrevMillis == 0) {
+  if (millis() - sendDataPrevMillis > 20000 || sendDataPrevMillis == 0) {
     count++;
     //external fx called
     getTDS();
@@ -104,10 +105,22 @@ void loop() {  //hanya untuk wifi
     if (WiFi.status() == WL_CONNECTED) {
       WiFiClient client;
       HTTPClient http;
-      String httpReqStr = serverName + "?tds=" + tdsValue + "&temperature=" + temperatureC + "&ph=" + ph + "&turbidity=" + turbidity;
+
+      // Build the URL string with the parameters
+      // Serial.println(temperatureC);
+      // Serial.println(tdsValue);
+      // Serial.println(ph);
+      // Serial.println(turbidity);
+      String httpReqStr = serverName + "?temperature=" + String(temperatureC, 2) + "&tds=" + String(tdsValue, 2) + "&ph=" + String(ph, 1) + "&turbidity=" + String(turbidity, 2);
+
+      // Begin the HTTP request
       http.begin(client, httpReqStr.c_str());
-      Serial.print(httpReqStr);
+      Serial.println(httpReqStr);
+
+      // Send HTTP GET request
       int httpResponseCode = http.GET();
+
+      // Check the returning code
       if (httpResponseCode > 0) {
         Serial.print("HTTP Response code: ");
         Serial.println(httpResponseCode);
@@ -117,8 +130,11 @@ void loop() {  //hanya untuk wifi
         Serial.print("Error code: ");
         Serial.println(httpResponseCode);
       }
+
       // Free resources
       http.end();
+    } else {
+      Serial.println("WiFi Disconnected");
     }
   }
 }
@@ -170,7 +186,7 @@ void getturbidity() {
   //turbidity sensor
   int turbiValue = analogRead(turbidityPin);
 
-  int turbidity = map(turbiValue, 0, 750, 100, 0);
+  turbidity = map(turbiValue, 0, 750, 100, 0);
   Serial.print(turbidity);
   // lcd.setCursor(0, 0);
   // lcd.print("Turbidity:");
@@ -199,7 +215,7 @@ void getturbidity() {
 void getTemp() {
   //temp sensor
   sensors.requestTemperatures();
-  float temperatureC = sensors.getTempCByIndex(0);
+  temperatureC = sensors.getTempCByIndex(0);
   float temperatureF = sensors.getTempFByIndex(0);
   Serial.print(temperatureC);
   Serial.print("ºC ");
