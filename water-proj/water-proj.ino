@@ -9,9 +9,9 @@
 #define VREF 3.3   // analog reference voltage(Volt) of the ADC
 #define SCOUNT 30  // sum of sample point
 
-const char* ssid = "UUMWiFi_Guest";
-const char* pass = "";
-String serverName = "http://ansf.infinitebe.com/wqms/test.php";
+const char* ssid = "anehh"; //based on your ssid
+const char* pass = "y86sxax2u2fje"; // based on your pwd
+String serverName = "http://ansf.infinitebe.com/wqms/test.php"; 
 unsigned long sendDataPrevMillis = 0;
 int count = 0;
 
@@ -38,13 +38,13 @@ int analogBuffer[SCOUNT];  // store the analog value in the array, read from ADC
 int analogBufferTemp[SCOUNT];
 int analogBufferIndex = 0;
 int copyIndex = 0;
-float temperatureC;
-int turbidity;
+float temperatureC = 0;
+//int turbidity = 0;
 
 //tds
 int i = 0;  //TDS
 float averageVoltage = 0;
-float tdsValue;
+float tdsValue = 0;
 float temperature = 25; 
  // current temperature for compensation
 
@@ -111,7 +111,7 @@ void loop() {  //hanya untuk wifi
       // Serial.println(tdsValue);
       // Serial.println(ph);
       // Serial.println(turbidity);
-      String httpReqStr = serverName + "?temperature=" + String(temperatureC, 2) + "&tds=" + String(tdsValue, 2) + "&ph=" + String(ph, 1) + "&turbidity=" + String(turbidity, 2);
+      String httpReqStr = serverName + "?temperature=" + String(temperatureC, 2) + "&tds=" + String(tdsValue, 2) + "&ph=" + String(ph, 1) + "&turbidity=" + String(voltage, 2);
 
       // Begin the HTTP request
       http.begin(client, httpReqStr.c_str());
@@ -143,7 +143,7 @@ void loop() {  //hanya untuk wifi
 
 void getTDS() {
   //tds sensor
-  for (i = 0; i < 10; i++) {
+  for (i = 0; i < 100; i++) {
     static unsigned long analogSampleTimepoint = millis();
     if (millis() - analogSampleTimepoint > 40U) {  //every 40 milliseconds,read the analog value from the ADC
       analogSampleTimepoint = millis();
@@ -185,31 +185,11 @@ void getTDS() {
 void getturbidity() {
   //turbidity sensor
   int turbiValue = analogRead(turbidityPin);
-
-  turbidity = map(turbiValue, 0, 750, 100, 0);
-  Serial.print(turbidity);
-  // lcd.setCursor(0, 0);
-  // lcd.print("Turbidity:");
-  // lcd.print("   ");
-  // lcd.setCursor(10, 0);
-  //lcd.print(turbidity);
-
+  float voltage = turbiValue * (5.0 / 1024.0);
+  Serial.println ("Sensor Output (V):");
+  Serial.println (voltage);
+  Serial.println();
   delay(1000);
-  if ((turbidity > 0) && (turbidity < 50)) {
-    // lcd.setCursor(0, 1);
-    // lcd.print(" its CLEAR ");
-    Serial.println(" its CLEAR ");
-  }
-  if ((turbidity > 20) && (turbidity < 50)) {
-    // lcd.setCursor(0, 1);
-    // lcd.print(" its CLOUDY ");
-    Serial.println(" its CLOUDY ");
-  }
-  if (turbidity > 50) {
-    // lcd.setCursor(0, 1);
-    // lcd.print(" its DIRTY ");
-    Serial.println(" its DIRTY ");
-  }
 }
 
 void getTemp() {
@@ -226,7 +206,7 @@ void getTemp() {
 
 void getPH() {
   //ph sensor
-  Value = analogRead(PHPin);
+  Value= analogRead(PHPin);
   Serial.print(Value);
   Serial.print(" | ");
   float voltage = Value * (3.3 / 4095.0);
